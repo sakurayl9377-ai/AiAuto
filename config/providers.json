@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "providers": [
+    {
+      "id": "openai",
+      "name": "OpenAI Official",
+      "risk": "official",
+      "baseUrl": "https://api.openai.com/v1",
+      "modelsEndpoint": "/models",
+      "chatCompletionsEndpoint": "/chat/completions",
+      "defaultModel": "gpt-4.1-mini",
+      "apiKeyHeader": "Authorization",
+      "apiKeyPrefix": "Bearer ",
+      "supports": ["streaming", "tool_use", "vision", "long_context"],
+      "notes": "Official OpenAI API. Recommended when available."
+    },
+    {
+      "id": "openrouter",
+      "name": "OpenRouter",
+      "risk": "trusted_gateway",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "modelsEndpoint": "/models",
+      "chatCompletionsEndpoint": "/chat/completions",
+      "defaultModel": "openai/gpt-4.1-mini",
+      "apiKeyHeader": "Authorization",
+      "apiKeyPrefix": "Bearer ",
+      "supports": ["streaming", "tool_use", "vision"],
+      "notes": "OpenAI-compatible gateway. Users should review provider policy and pricing."
+    },
+    {
+      "id": "local-openai-compatible",
+      "name": "Local OpenAI-Compatible",
+      "risk": "local",
+      "baseUrl": "http://127.0.0.1:11434/v1",
+      "modelsEndpoint": "/models",
+      "chatCompletionsEndpoint": "/chat/completions",
+      "defaultModel": "llama3.1",
+      "apiKeyHeader": "Authorization",
+      "apiKeyPrefix": "Bearer ",
+      "supports": ["streaming"],
+      "notes": "For local gateways such as Ollama or LM Studio when OpenAI-compatible mode is enabled."
+    },
+    {
+      "id": "custom",
+      "name": "Custom OpenAI-Compatible",
+      "risk": "unknown",
+      "baseUrl": "",
+      "modelsEndpoint": "/models",
+      "chatCompletionsEndpoint": "/chat/completions",
+      "defaultModel": "",
+      "apiKeyHeader": "Authorization",
+      "apiKeyPrefix": "Bearer ",
+      "supports": [],
+      "notes": "User supplied Base URL. Treat unknown providers carefully."
+    }
+  ]
+}
+

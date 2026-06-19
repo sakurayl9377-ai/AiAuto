@@ -1,0 +1,65 @@
+flowchart TD
+    A["用户打开软件"] --> B["安装前环境检测"]
+
+    B --> C{环境是否通过}
+    C -->|通过| D["进入工具安装向导"]
+    C -->|不通过| E["环境修复中心"]
+
+    E --> F{问题类型}
+    F -->|可自动修复| G["用户确认后一键修复"]
+    F -->|需要管理员权限| H["提示用户授权或手动处理"]
+    F -->|只能手动处理| I["给出步骤和复制命令"]
+
+    G --> B
+    H --> B
+    I --> B
+
+    D --> J["选择要安装的 AI 编程工具"]
+    J --> K["Codex"]
+    J --> L["Claude Code"]
+    J --> M["Cursor"]
+    J --> N["Gemini CLI"]
+    J --> O["OpenCode / 其他工具"]
+
+    K --> P["打开官方安装方式 / winget / npm"]
+    L --> P
+    M --> P
+    N --> P
+    O --> P
+
+    P --> Q["用户完成安装"]
+    Q --> R["重新检测工具是否安装成功"]
+
+    R --> S{是否需要 CC Switch}
+    S -->|推荐安装| T["安装 / 打开 CC Switch 官方安装流程"]
+    S -->|跳过| U["进入 Provider 配置"]
+
+    T --> V["用户完成 CC Switch 安装"]
+    V --> W["检测 CC Switch 是否可用"]
+    W --> U
+
+    U --> X["展示 Provider 目录"]
+    X --> Y["官方 API"]
+    X --> Z["可信 OpenAI-compatible 网关"]
+    X --> AA["社区中转服务"]
+    X --> AB["未知风险服务"]
+
+    Y --> AC["用户填写 Base URL / API Key"]
+    Z --> AC
+    AA --> AC
+    AB --> AC
+
+    AC --> AD["本地连接测试"]
+    AD --> AE{测试是否通过}
+
+    AE -->|通过| AF["识别模型列表 / streaming / tool use / vision / long context"]
+    AE -->|失败| AG["配置医生诊断失败原因"]
+
+    AG --> AC
+
+    AF --> AH["生成 CC Switch 配置 / Deep Link"]
+    AH --> AI["导入到 CC Switch"]
+    AI --> AJ["同步到 Codex / Claude Code / Cursor 等工具"]
+    AJ --> AK["最终检测报告"]
+    AK --> AL["完成"]
+

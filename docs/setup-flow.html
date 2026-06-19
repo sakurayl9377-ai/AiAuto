@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 编程环境助手流程图</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --text: #1f2328;
+      --muted: #5b6472;
+      --line: #8fa0b6;
+      --primary: #2364aa;
+      --start-bg: #edf6ff;
+      --start-line: #9fc8f3;
+      --ok-bg: #edf8f1;
+      --ok-line: #9fd9b8;
+      --ok-text: #207c43;
+      --warn-bg: #fff7e8;
+      --warn-line: #f1c16b;
+      --warn-text: #ad6900;
+      --risk-bg: #fff1f0;
+      --risk-line: #f0aaa5;
+      --risk-text: #ba1a1a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei UI", "Segoe UI", Arial, sans-serif;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid #d8dee8;
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .hint {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: var(--muted);
+      font-size: 12px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button {
+      min-width: 42px;
+      height: 34px;
+      padding: 0 12px;
+      border: 1px solid #b8c0cc;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    main {
+      height: calc(100vh - 74px);
+      overflow: auto;
+      padding: 18px;
+    }
+
+    .canvas {
+      transform-origin: top left;
+      width: 2480px;
+      height: 3180px;
+      background: #f9fafc;
+      border: 1px solid #e1e7ef;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .lane-title {
+      fill: #5b6472;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .edge {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 3;
+    }
+
+    .edge-label rect {
+      fill: #fff;
+      stroke: #d8dee8;
+      rx: 12;
+      ry: 12;
+    }
+
+    .edge-label text {
+      fill: #5b6472;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .node-shape {
+      fill: var(--panel);
+      stroke: #ccd5e1;
+      stroke-width: 2;
+      filter: drop-shadow(0 12px 18px rgba(15, 23, 42, 0.10));
+    }
+
+    .node.start .node-shape {
+      fill: var(--start-bg);
+      stroke: var(--start-line);
+    }
+
+    .node.ok .node-shape {
+      fill: var(--ok-bg);
+      stroke: var(--ok-line);
+    }
+
+    .node.warn .node-shape {
+      fill: var(--warn-bg);
+      stroke: var(--warn-line);
+    }
+
+    .node.risk .node-shape {
+      fill: var(--risk-bg);
+      stroke: var(--risk-line);
+    }
+
+    .node text {
+      fill: var(--text);
+      font-size: 22px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .node .sub {
+      fill: #5b6472;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .node.ok text {
+      fill: var(--ok-text);
+    }
+
+    .node.warn text {
+      fill: var(--warn-text);
+    }
+
+    .node.risk text {
+      fill: var(--risk-text);
+    }
+
+    .note rect {
+      fill: #fff;
+      stroke: #d8dee8;
+      stroke-width: 2;
+      rx: 8;
+      ry: 8;
+      filter: drop-shadow(0 8px 14px rgba(15, 23, 42, 0.07));
+    }
+
+    .note text {
+      fill: #5b6472;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 720px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      main {
+        height: calc(100vh - 126px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>AI 编程环境助手流程图 <span class="tag">MVP</span></h1>
+      <div class="hint">这版是 SVG 流程图，连线和分支标签已经补全。可以滚动查看，也可以缩放。</div>
+    </div>
+    <div class="toolbar" aria-label="缩放工具">
+      <button type="button" id="zoomOut" title="缩小">-</button>
+      <button type="button" id="zoomReset" title="重置">100%</button>
+      <button type="button" id="zoomIn" title="放大">+</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="canvas" id="canvas">
+      <svg id="flowSvg" viewBox="0 0 2480 3180" role="img" aria-label="AI 编程环境助手流程图"></svg>
+    </div>
+  </main>
+
+  <script>
+    const svg = document.getElementById("flowSvg");
+    const NS = "http://www.w3.org/2000/svg";
+
+    const nodes = [
+      { id: "A", lane: 1, cx: 280, cy: 190, w: 360, h: 90, cls: "start", lines: ["用户打开软件"] },
+      { id: "B", lane: 1, cx: 280, cy: 340, w: 360, h: 90, lines: ["安装前环境检测"] },
+      { id: "C", lane: 1, cx: 280, cy: 540, type: "diamond", size: 190, lines: ["环境是否通过"] },
+
+      { id: "E", lane: 2, cx: 760, cy: 540, w: 360, h: 90, cls: "warn", lines: ["环境修复中心"] },
+      { id: "F", lane: 2, cx: 760, cy: 720, type: "diamond", size: 190, lines: ["问题类型"] },
+      { id: "G", lane: 1, cx: 280, cy: 930, w: 390, h: 90, cls: "ok", lines: ["可自动修复", "用户确认后一键修复"] },
+      { id: "H", lane: 2, cx: 760, cy: 930, w: 390, h: 90, cls: "warn", lines: ["需要管理员权限", "提示授权或手动处理"] },
+      { id: "I", lane: 3, cx: 1240, cy: 930, w: 390, h: 90, lines: ["只能手动处理", "给出步骤和复制命令"] },
+      { id: "RD", lane: 2, cx: 760, cy: 1110, w: 360, h: 90, lines: ["修复后重新检测"] },
+
+      { id: "D", lane: 4, cx: 1720, cy: 540, w: 390, h: 90, cls: "ok", lines: ["进入工具安装向导"] },
+      { id: "J", lane: 4, cx: 1720, cy: 720, w: 430, h: 120, lines: ["选择 AI 编程工具", "Codex / Claude Code / Cursor", "Gemini CLI / OpenCode"] },
+      { id: "P", lane: 4, cx: 1720, cy: 900, w: 430, h: 90, lines: ["打开官方安装方式", "winget / npm / 官方文档"] },
+      { id: "Q", lane: 4, cx: 1720, cy: 1060, w: 390, h: 90, lines: ["用户完成安装"] },
+      { id: "R", lane: 4, cx: 1720, cy: 1220, w: 430, h: 90, lines: ["重新检测工具是否安装成功"] },
+      { id: "S", lane: 4, cx: 1720, cy: 1420, type: "diamond", size: 190, lines: ["是否需要", "CC Switch"] },
+
+      { id: "T", lane: 3, cx: 1240, cy: 1600, w: 430, h: 90, lines: ["安装 / 打开 CC Switch", "官方安装流程"] },
+      { id: "V", lane: 3, cx: 1240, cy: 1760, w: 390, h: 90, lines: ["用户完成", "CC Switch 安装"] },
+      { id: "W", lane: 3, cx: 1240, cy: 1920, w: 390, h: 90, lines: ["检测 CC Switch", "是否可用"] },
+
+      { id: "U", lane: 5, cx: 2200, cy: 1600, w: 390, h: 90, lines: ["进入 Provider 配置"] },
+      { id: "X", lane: 5, cx: 2200, cy: 1760, w: 390, h: 90, lines: ["展示 Provider 目录"] },
+      { id: "Y", lane: 2, cx: 760, cy: 2040, w: 340, h: 86, cls: "ok", lines: ["官方 API"] },
+      { id: "Z", lane: 3, cx: 1240, cy: 2040, w: 390, h: 86, lines: ["可信 OpenAI-compatible", "网关"] },
+      { id: "AA", lane: 4, cx: 1720, cy: 2040, w: 340, h: 86, cls: "warn", lines: ["社区中转服务"] },
+      { id: "AB", lane: 5, cx: 2200, cy: 2040, w: 340, h: 86, cls: "risk", lines: ["未知风险服务"] },
+
+      { id: "AC", lane: 5, cx: 2200, cy: 2220, w: 430, h: 90, lines: ["用户填写 Base URL", "和 API Key"] },
+      { id: "AD", lane: 5, cx: 2200, cy: 2380, w: 390, h: 90, lines: ["本地连接测试"] },
+      { id: "AE", lane: 5, cx: 2200, cy: 2580, type: "diamond", size: 190, lines: ["测试是否通过"] },
+      { id: "AG", lane: 4, cx: 1720, cy: 2760, w: 430, h: 90, cls: "warn", lines: ["配置医生", "诊断失败原因"] },
+      { id: "AF", lane: 5, cx: 2200, cy: 2760, w: 430, h: 120, cls: "ok", lines: ["识别模型能力", "streaming / tool use", "vision / long context"] },
+      { id: "AH", lane: 5, cx: 2200, cy: 2940, w: 430, h: 90, lines: ["生成 CC Switch 配置", "或 Deep Link"] },
+      { id: "AI", lane: 5, cx: 2200, cy: 3100, w: 390, h: 90, lines: ["导入到 CC Switch"] },
+      { id: "AJ", lane: 4, cx: 1720, cy: 2940, w: 430, h: 110, lines: ["同步到 Codex", "Claude Code / Cursor", "等工具"] },
+      { id: "AK", lane: 4, cx: 1720, cy: 3100, w: 390, h: 90, lines: ["最终检测报告"] },
+      { id: "AL", lane: 3, cx: 1240, cy: 3100, w: 300, h: 90, cls: "start", lines: ["完成"] }
+    ];
+
+    const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+
+    const edges = [
+      { from: "A", to: "B" },
+      { from: "B", to: "C" },
+      { from: "C", to: "E", label: "不通过", labelX: 520, labelY: 508 },
+      { from: "C", to: "D", label: "通过", labelX: 960, labelY: 508 },
+      { from: "E", to: "F" },
+      { from: "F", to: "G", label: "可自动修复", labelX: 470, labelY: 805, route: "vh" },
+      { from: "F", to: "H", label: "需授权", labelX: 820, labelY: 815 },
+      { from: "F", to: "I", label: "仅手动", labelX: 1030, labelY: 805, route: "vh" },
+      { from: "G", to: "RD", route: "hv" },
+      { from: "H", to: "RD" },
+      { from: "I", to: "RD", route: "hv" },
+      { from: "RD", to: "B", label: "重新检测", points: [[580, 1110], [60, 1110], [60, 340], [100, 340]], labelX: 160, labelY: 620 },
+
+      { from: "D", to: "J" },
+      { from: "J", to: "P" },
+      { from: "P", to: "Q" },
+      { from: "Q", to: "R" },
+      { from: "R", to: "S" },
+      { from: "S", to: "T", label: "推荐安装", labelX: 1480, labelY: 1515, route: "vh" },
+      { from: "S", to: "U", label: "跳过", labelX: 1995, labelY: 1515, route: "vh" },
+      { from: "T", to: "V" },
+      { from: "V", to: "W" },
+      { from: "W", to: "U", label: "检测通过后继续", labelX: 1710, labelY: 1850, route: "hv" },
+
+      { from: "U", to: "X" },
+      { from: "X", to: "Y", label: "风险分级", labelX: 1470, labelY: 1880, route: "vh" },
+      { from: "X", to: "Z", route: "vh" },
+      { from: "X", to: "AA", route: "vh" },
+      { from: "X", to: "AB" },
+      { from: "Y", to: "AC", route: "vh" },
+      { from: "Z", to: "AC", route: "vh" },
+      { from: "AA", to: "AC", route: "vh" },
+      { from: "AB", to: "AC" },
+      { from: "AC", to: "AD" },
+      { from: "AD", to: "AE" },
+      { from: "AE", to: "AG", label: "失败", labelX: 1955, labelY: 2685, route: "vh" },
+      { from: "AG", to: "AC", label: "修正后重测", points: [[1720, 2715], [1720, 2220], [1985, 2220]], labelX: 1840, labelY: 2415 },
+      { from: "AE", to: "AF", label: "通过", labelX: 2250, labelY: 2685 },
+      { from: "AF", to: "AH" },
+      { from: "AH", to: "AI" },
+      { from: "AI", to: "AJ", route: "hv" },
+      { from: "AJ", to: "AK" },
+      { from: "AK", to: "AL", route: "hv" }
+    ];
+
+    const notes = [
+      {
+        x: 100,
+        y: 1250,
+        w: 700,
+        h: 120,
+        lines: [
+          "修改建议：安装工具优先打开官方来源，不建议自建下载镜像。",
+          "修复动作必须区分自动修复、需授权、仅手动。"
+        ]
+      },
+      {
+        x: 1270,
+        y: 1840,
+        w: 760,
+        h: 120,
+        lines: [
+          "商业化建议：后台只管理授权码、Provider 列表、风险等级、教程链接、公告。",
+          "用户 API Key 只保存在本机，连接测试也从本机直接发起。"
+        ]
+      }
+    ];
+
+    function el(name, attrs = {}) {
+      const element = document.createElementNS(NS, name);
+      Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+      return element;
+    }
+
+    function appendText(parent, lines, x, y, className = "") {
+      const text = el("text", { x, y, class: className });
+      const offset = -((lines.length - 1) * 14);
+      lines.forEach((line, index) => {
+        const tspan = el("tspan", {
+          x,
+          dy: index === 0 ? offset : 28,
+          class: index === 0 ? "" : "sub"
+        });
+        tspan.textContent = line;
+        text.appendChild(tspan);
+      });
+      parent.appendChild(text);
+      return text;
+    }
+
+    function bounds(node) {
+      if (node.type === "diamond") {
+        const r = node.size / 2;
+        return { left: node.cx - r, right: node.cx + r, top: node.cy - r, bottom: node.cy + r };
+      }
+
+      return {
+        left: node.cx - node.w / 2,
+        right: node.cx + node.w / 2,
+        top: node.cy - node.h / 2,
+        bottom: node.cy + node.h / 2
+      };
+    }
+
+    function anchor(node, target) {
+      const b = bounds(node);
+      const dx = target.cx - node.cx;
+      const dy = target.cy - node.cy;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        return { x: dx >= 0 ? b.right : b.left, y: node.cy };
+      }
+
+      return { x: node.cx, y: dy >= 0 ? b.bottom : b.top };
+    }
+
+    function routePoints(edge) {
+      if (edge.points) {
+        return edge.points.map(([x, y]) => ({ x, y }));
+      }
+
+      const from = nodeMap.get(edge.from);
+      const to = nodeMap.get(edge.to);
+      const start = anchor(from, to);
+      const end = anchor(to, from);
+
+      if (edge.route === "hv") {
+        return [start, { x: end.x, y: start.y }, end];
+      }
+
+      if (edge.route === "vh") {
+        return [start, { x: start.x, y: end.y }, end];
+      }
+
+      if (Math.abs(start.x - end.x) < 4 || Math.abs(start.y - end.y) < 4) {
+        return [start, end];
+      }
+
+      return [start, { x: start.x, y: end.y }, end];
+    }
+
+    function drawDefs() {
+      const defs = el("defs");
+      const marker = el("marker", {
+        id: "arrow",
+        markerWidth: 12,
+        markerHeight: 12,
+        refX: 10,
+        refY: 6,
+        orient: "auto",
+        markerUnits: "strokeWidth"
+      });
+      marker.appendChild(el("path", { d: "M 0 0 L 12 6 L 0 12 z", fill: "var(--line)" }));
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+    }
+
+    function drawLaneTitles() {
+      const titles = [
+        ["启动与检测", 280],
+        ["修复", 760],
+        ["工具安装", 1240],
+        ["Provider 配置", 1720],
+        ["导入与完成", 2200]
+      ];
+
+      titles.forEach(([title, x]) => {
+        const text = el("text", { x, y: 85, class: "lane-title", "text-anchor": "middle" });
+        text.textContent = title;
+        svg.appendChild(text);
+      });
+    }
+
+    function drawEdge(edge) {
+      const points = routePoints(edge);
+      const d = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+      svg.appendChild(el("path", { d, class: "edge", "marker-end": "url(#arrow)" }));
+
+      if (edge.label) {
+        const group = el("g", { class: "edge-label" });
+        const textWidth = Math.max(56, edge.label.length * 17 + 20);
+        group.appendChild(el("rect", { x: edge.labelX - textWidth / 2, y: edge.labelY - 18, width: textWidth, height: 34 }));
+        const text = el("text", { x: edge.labelX, y: edge.labelY + 5, "text-anchor": "middle" });
+        text.textContent = edge.label;
+        group.appendChild(text);
+        svg.appendChild(group);
+      }
+    }
+
+    function drawNode(node) {
+      const group = el("g", { class: `node ${node.cls || ""}`.trim() });
+
+      if (node.type === "diamond") {
+        const r = node.size / 2;
+        group.appendChild(el("polygon", {
+          points: `${node.cx},${node.cy - r} ${node.cx + r},${node.cy} ${node.cx},${node.cy + r} ${node.cx - r},${node.cy}`,
+          class: "node-shape"
+        }));
+      } else {
+        group.appendChild(el("rect", {
+          x: node.cx - node.w / 2,
+          y: node.cy - node.h / 2,
+          width: node.w,
+          height: node.h,
+          rx: 8,
+          ry: 8,
+          class: "node-shape"
+        }));
+      }
+
+      appendText(group, node.lines, node.cx, node.cy);
+      svg.appendChild(group);
+    }
+
+    function drawNote(note) {
+      const group = el("g", { class: "note" });
+      group.appendChild(el("rect", { x: note.x, y: note.y, width: note.w, height: note.h }));
+      note.lines.forEach((line, index) => {
+        const text = el("text", { x: note.x + 24, y: note.y + 45 + index * 34 });
+        text.textContent = line;
+        group.appendChild(text);
+      });
+      svg.appendChild(group);
+    }
+
+    drawDefs();
+    drawLaneTitles();
+    edges.forEach(drawEdge);
+    notes.forEach(drawNote);
+    nodes.forEach(drawNode);
+
+    const canvas = document.getElementById("canvas");
+    const resetButton = document.getElementById("zoomReset");
+    let zoom = 1;
+
+    function setZoom(nextZoom) {
+      zoom = Math.max(0.45, Math.min(1.8, nextZoom));
+      canvas.style.transform = `scale(${zoom})`;
+      resetButton.textContent = `${Math.round(zoom * 100)}%`;
+    }
+
+    document.getElementById("zoomOut").addEventListener("click", () => setZoom(zoom - 0.1));
+    document.getElementById("zoomIn").addEventListener("click", () => setZoom(zoom + 0.1));
+    resetButton.addEventListener("click", () => setZoom(1));
+    setZoom(0.72);
+  </script>
+</body>
+</html>

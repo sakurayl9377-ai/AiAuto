@@ -1,0 +1,38 @@
+{
+  "node": {
+    "indexSources": [
+      {
+        "name": "Node.js official",
+        "indexUrl": "https://nodejs.org/dist/index.json",
+        "distBaseUrl": "https://nodejs.org/dist"
+      },
+      {
+        "name": "npmmirror Node.js mirror",
+        "indexUrl": "https://npmmirror.com/mirrors/node/index.json",
+        "distBaseUrl": "https://npmmirror.com/mirrors/node"
+      }
+    ]
+  },
+  "git": {
+    "releaseSources": [
+      {
+        "name": "Git for Windows GitHub API",
+        "type": "github-release-api",
+        "url": "https://api.github.com/repos/git-for-windows/git/releases/latest"
+      },
+      {
+        "name": "TUNA Git for Windows mirror",
+        "type": "directory-index",
+        "url": "https://mirrors.tuna.tsinghua.edu.cn/github-release/git-for-windows/git/LatestRelease/"
+      }
+    ]
+  },
+  "winget": {
+    "bundleSources": [
+      {
+        "name": "Microsoft App Installer",
+        "url": "https://aka.ms/getwinget"
+      }
+    ]
+  }
+}

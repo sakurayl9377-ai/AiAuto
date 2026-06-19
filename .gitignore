@@ -1,0 +1,9 @@
+node_modules/
+backend/node_modules/
+backend/data/
+backend/.env
+backend/.license-server*.log
+backend/.license-server.pid
+tmp/
+.build/
+*.log

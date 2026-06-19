@@ -1,0 +1,12 @@
+services:
+  codemate-license-server:
+    build:
+      context: .
+    container_name: codemate-license-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${HOST_PORT:-8086}:${PORT:-8787}"
+    volumes:
+      - ./data:/app/data
