@@ -220,6 +220,10 @@ export function renderAdminPage() {
       margin-bottom: 12px;
     }
 
+    .license-filters {
+      grid-template-columns: minmax(180px, 1fr) 150px 150px auto;
+    }
+
     .table-wrap {
       overflow: auto;
       border: 1px solid var(--line);
@@ -447,16 +451,23 @@ export function renderAdminPage() {
 
       <div class="panel">
         <h2>授权码列表</h2>
-        <div class="filters">
+        <div class="filters license-filters">
           <label>搜索
             <input id="licenseQuery" placeholder="授权码、套餐、订单、买家">
           </label>
-          <label>状态
+          <label>授权状态
             <select id="licenseStatus">
               <option value="">全部</option>
               <option value="active">有效</option>
               <option value="revoked">已吊销</option>
               <option value="expired">已过期</option>
+            </select>
+          </label>
+          <label>使用状态
+            <select id="licenseUsage">
+              <option value="unused" selected>未使用</option>
+              <option value="used">已使用</option>
+              <option value="">全部</option>
             </select>
           </label>
           <button id="loadLicenses" class="secondary">筛选</button>
@@ -680,8 +691,10 @@ export function renderAdminPage() {
       const params = new URLSearchParams();
       const query = el("licenseQuery").value.trim();
       const status = el("licenseStatus").value;
+      const usage = el("licenseUsage").value;
       if (query) params.set("q", query);
       if (status) params.set("status", status);
+      if (usage) params.set("usage", usage);
       const data = await api("/api/admin/licenses?" + params.toString());
       const rows = data.licenses || [];
       if (!rows.length) {

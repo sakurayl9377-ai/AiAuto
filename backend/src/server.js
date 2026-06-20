@@ -552,9 +552,11 @@ app.get("/api/admin/summary", requireAdmin, (_req, res) => {
 app.get("/api/admin/licenses", requireAdmin, (req, res) => {
   const q = String(req.query.q || "").trim();
   const status = String(req.query.status || "").trim();
+  const usage = String(req.query.usage || "").trim();
   const limit = Math.max(1, Math.min(500, Number(req.query.limit || 200)));
   const params = [];
   const where = [];
+  const having = [];
   const currentTime = nowIso();
 
   if (q) {
@@ -574,6 +576,12 @@ app.get("/api/admin/licenses", requireAdmin, (req, res) => {
     params.push(status);
   }
 
+  if (usage === "unused") {
+    having.push("active_activations = 0");
+  } else if (usage === "used") {
+    having.push("active_activations > 0");
+  }
+
   const licenses = db.prepare(`
     SELECT
       l.*,
@@ -583,6 +591,7 @@ app.get("/api/admin/licenses", requireAdmin, (req, res) => {
     LEFT JOIN activations a ON a.license_id = l.id
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
     GROUP BY l.id
+    ${having.length ? `HAVING ${having.join(" AND ")}` : ""}
     ORDER BY l.created_at DESC
     LIMIT ?
   `).all(...params, limit).map(adminLicense);
