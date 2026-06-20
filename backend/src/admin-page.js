@@ -279,6 +279,7 @@ export function renderAdminPage() {
     .pill.active { background: #e7f6ee; color: var(--ok); }
     .pill.revoked { background: #fdecec; color: var(--danger); }
     .pill.expired { background: #fff4e5; color: var(--warning); }
+    .pill.used { background: #e0f2fe; color: #075985; }
     .pill.unbound { background: #eef2f6; color: #475467; }
 
     .muted { color: var(--muted); }
@@ -702,6 +703,9 @@ export function renderAdminPage() {
         return;
       }
       el("licensesBody").innerHTML = rows.map((license) => {
+        const usageAction = license.isUsed
+          ? '<span class="pill used">已使用</span>'
+          : '<button class="secondary" data-action="mark-used" data-code="' + escapeHtml(license.code) + '">使用</button>';
         return '<tr>' +
           '<td class="code">' + escapeHtml(license.code) + '</td>' +
           '<td>' + statusPill(license.status, license.expiresAt) + '</td>' +
@@ -712,6 +716,7 @@ export function renderAdminPage() {
           '<td class="actions" style="margin:0;">' +
             '<button class="secondary" data-action="open" data-code="' + escapeHtml(license.code) + '">查看</button>' +
             '<button class="secondary" data-action="copy" data-code="' + escapeHtml(license.code) + '">复制</button>' +
+            usageAction +
           '</td>' +
         '</tr>';
       }).join("");
@@ -745,9 +750,11 @@ export function renderAdminPage() {
       const fields = [
         ["授权码", license.code],
         ["状态", statusLabel(license.status, license.expiresAt)],
+        ["使用状态", license.isUsed ? "已使用" : "未使用"],
         ["套餐", license.plan],
         ["设备", String(license.activeActivations) + " / " + String(license.maxActivations)],
         ["到期", formatDate(license.expiresAt) || "永久"],
+        ["手动使用时间", formatDate(license.manualUsedAt) || ""],
         ["订单", license.orderId || ""],
         ["买家", license.buyerId || ""],
         ["创建时间", formatDate(license.createdAt)]
@@ -797,6 +804,13 @@ export function renderAdminPage() {
       await api("/api/admin/licenses/" + encodeURIComponent(code) + "/reinstate", { method: "POST" });
       await refreshAll();
       await openLicense(code);
+    }
+
+    async function markLicenseUsed(code) {
+      if (!confirm("确定将该授权码标记为已使用吗？")) return;
+      await api("/api/admin/licenses/" + encodeURIComponent(code) + "/mark-used", { method: "POST" });
+      await refreshAll();
+      if (state.selectedCode === code) await openLicense(code);
     }
 
     async function unbindActivation(code, activationId) {
@@ -908,6 +922,7 @@ export function renderAdminPage() {
       try {
         if (action === "open") await openLicense(code);
         if (action === "copy") await copyText(code);
+        if (action === "mark-used") await markLicenseUsed(code);
       } catch (error) {
         el("currentUser").textContent = error.message;
       }

@@ -80,6 +80,11 @@ db.exec(`
   );
 `);
 
+const licenseColumns = db.prepare("PRAGMA table_info(licenses)").all().map((column) => column.name);
+if (!licenseColumns.includes("manual_used_at")) {
+  db.prepare("ALTER TABLE licenses ADD COLUMN manual_used_at TEXT").run();
+}
+
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
@@ -261,6 +266,7 @@ function publicLicense(row) {
     buyerId: row.buyer_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    manualUsedAt: row.manual_used_at,
     revokedReason: row.revoked_reason,
     metadata: parseMetadata(row)
   };
@@ -286,12 +292,14 @@ function syncActivatedCount(licenseId) {
 
 function adminLicense(row) {
   if (!row) return null;
+  const activeActivations = Number(row.active_activations ?? row.activated_count ?? 0);
 
   return {
     ...publicLicense(row),
     id: row.id,
-    activeActivations: Number(row.active_activations ?? row.activated_count ?? 0),
+    activeActivations,
     totalActivations: Number(row.total_activations ?? 0),
+    isUsed: activeActivations > 0 || Boolean(row.manual_used_at),
     isExpired: Boolean(isExpired(row))
   };
 }
@@ -577,9 +585,9 @@ app.get("/api/admin/licenses", requireAdmin, (req, res) => {
   }
 
   if (usage === "unused") {
-    having.push("active_activations = 0");
+    having.push("active_activations = 0 AND l.manual_used_at IS NULL");
   } else if (usage === "used") {
-    having.push("active_activations > 0");
+    having.push("(active_activations > 0 OR l.manual_used_at IS NOT NULL)");
   }
 
   const licenses = db.prepare(`
@@ -632,6 +640,19 @@ app.post("/api/admin/licenses/:code/reinstate", requireAdmin, (req, res) => {
 
   const row = db.prepare("SELECT * FROM licenses WHERE code = ?").get(req.params.code);
   res.json({ ok: true, message: "License reinstated.", license: publicLicense(row) });
+});
+
+app.post("/api/admin/licenses/:code/mark-used", requireAdmin, (req, res) => {
+  const currentTime = nowIso();
+  const result = db.prepare(`
+    UPDATE licenses
+    SET manual_used_at = COALESCE(manual_used_at, ?), updated_at = ?
+    WHERE code = ?
+  `).run(currentTime, currentTime, req.params.code);
+  if (!result.changes) return res.status(404).json({ ok: false, message: "License not found." });
+
+  const row = db.prepare("SELECT * FROM licenses WHERE code = ?").get(req.params.code);
+  res.json({ ok: true, message: "License marked as used.", license: publicLicense(row) });
 });
 
 app.post("/api/admin/licenses/:code/activations/:activationId/unbind", requireAdmin, (req, res) => {
